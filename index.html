@@ -8,6 +8,13 @@
   <!-- Load Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
+  <!-- Configure Tailwind Dark Mode -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+  
   <!-- Load React & Babel for in-browser rendering -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -16,12 +23,12 @@
   <!-- Load html2pdf.js for guaranteed color PDF downloads -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-<body class="bg-zinc-100/50">
+<body class="bg-zinc-100/50 dark:bg-zinc-950 transition-colors">
   <div id="root"></div>
 
   <!-- Application Logic -->
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useRef } = React;
 
     // --- Inline Icons ---
     const SvgIcon = ({ children, className = "" }) => (
@@ -33,19 +40,22 @@
     const Trash2 = (p) => <SvgIcon {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></SvgIcon>;
     const Printer = (p) => <SvgIcon {...p}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></SvgIcon>;
     const Download = (p) => <SvgIcon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></SvgIcon>;
+    const Upload = (p) => <SvgIcon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></SvgIcon>;
     const RefreshCw = (p) => <SvgIcon {...p}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></SvgIcon>;
     const CalendarDays = (p) => <SvgIcon {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></SvgIcon>;
     const Settings2 = (p) => <SvgIcon {...p}><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="7" r="3"/><circle cx="8" cy="17" r="3"/></SvgIcon>;
-    const Palette = (p) => <SvgIcon {...p}><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></SvgIcon>;
     const Users = (p) => <SvgIcon {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></SvgIcon>;
     const TrendingUp = (p) => <SvgIcon {...p}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></SvgIcon>;
     const TrendingDown = (p) => <SvgIcon {...p}><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></SvgIcon>;
     const Wallet = (p) => <SvgIcon {...p}><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></SvgIcon>;
-    const Copy = (p) => <SvgIcon {...p}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></SvgIcon>;
     const Check = (p) => <SvgIcon {...p}><polyline points="20 6 9 17 4 12"/></SvgIcon>;
     const ChevronRight = (p) => <SvgIcon {...p}><polyline points="9 18 15 12 9 6"/></SvgIcon>;
     const FileSpreadsheet = (p) => <SvgIcon {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></SvgIcon>;
     const PieChart = (p) => <SvgIcon {...p}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></SvgIcon>;
+    const Moon = (p) => <SvgIcon {...p}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></SvgIcon>;
+    const Sun = (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></SvgIcon>;
+    const ImagePlus = (p) => <SvgIcon {...p}><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><path d="M19 3v6"/><path d="M16 6h6"/></SvgIcon>;
+    const UsersRound = (p) => <SvgIcon {...p}><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></SvgIcon>;
 
     // --- Constants & Defaults ---
     const CURRENCIES = [
@@ -69,21 +79,23 @@
 
     const generateRandomID = () => `REP-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
 
-    const getToday = () => {
+    // Helper to generate ISO strings strictly for date inputs
+    const getTodayISO = () => {
       const d = new Date();
-      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     };
 
     const DEFAULT_REPORT = {
       id: generateRandomID(),
-      dateGenerated: getToday(),
-      periodStart: '01/03/2026',
-      periodEnd: '31/03/2026',
+      dateGenerated: getTodayISO(),
+      periodStart: '2026-03-01',
+      periodEnd: '2026-03-31',
       currency: 'USD',
-      color: '#4338ca', 
+      color: '#27272a', 
       customColors: [],
       
       businessName: 'Our Digital Empire',
+      logoUrl: '',
       
       partner1: { name: 'Partner A', split: 50 },
       partner2: { name: 'Partner B', split: 50 },
@@ -101,30 +113,62 @@
         { id: 2, description: 'Notion Subscription', amount: 10, paidBy: 'partner2' },
         { id: 3, description: 'Facebook Ads', amount: 300, paidBy: 'shared' },
       ],
+
+      thirdPartyCuts: [],
       
-      notes: 'Great month! Ad spend converted really well on TikTok.',
+      notes: 'All operating expenses incurred and paid by an individual are subject to reimbursement to that individual.',
+      paymentInstructions: '',
       status: 'pending', 
     };
 
     // --- Helper Components ---
     const Input = ({ label, value, onChange, placeholder, className = "", rightAction, type="text", min, step }) => (
       <div className={`flex flex-col mb-4 ${className}`}>
-        {label && <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">{label}</label>}
+        {label && <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">{label}</label>}
         <div className="relative flex items-center">
           <input
             type={type} min={min} step={step} value={value} onChange={onChange} placeholder={placeholder}
-            className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-lg text-sm text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-zinc-50/50 focus:bg-white shadow-sm"
+            className="w-full px-3.5 py-2.5 border border-zinc-200 dark:border-zinc-700/80 rounded-lg text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all bg-zinc-50/50 dark:bg-zinc-900 focus:bg-white dark:focus:bg-zinc-800 shadow-sm"
           />
           {rightAction && <div className="absolute right-2 flex items-center">{rightAction}</div>}
         </div>
       </div>
     );
 
+    // Custom Date Input to force DD/MM/YYYY visually while keeping the native calendar pop-up
+    const DateInput = ({ label, value, onChange, className = "" }) => {
+      // Formats the hidden ISO string (YYYY-MM-DD) into DD/MM/YYYY for display
+      const displayDate = value && value.includes('-') ? value.split('-').reverse().join('/') : value;
+      
+      return (
+        <div className={`flex flex-col mb-4 ${className}`}>
+          {label && <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">{label}</label>}
+          <div className="relative flex items-center group">
+            <div className="w-full px-3.5 py-2.5 border border-zinc-200 dark:border-zinc-700/80 rounded-lg text-sm text-zinc-800 dark:text-zinc-100 bg-zinc-50/50 dark:bg-zinc-900 shadow-sm flex justify-between items-center group-focus-within:bg-white dark:group-focus-within:bg-zinc-800 group-focus-within:ring-2 group-focus-within:ring-indigo-500/20 group-focus-within:border-indigo-500 dark:group-focus-within:border-indigo-400 transition-all pointer-events-none">
+              <span>{displayDate || "DD/MM/YYYY"}</span>
+              <CalendarDays className="w-4 h-4 text-zinc-400" />
+            </div>
+            <input
+              type="date"
+              value={value}
+              onChange={onChange}
+              onClick={(e) => {
+                if (typeof e.target.showPicker === 'function') {
+                  try { e.target.showPicker(); } catch (err) {}
+                }
+              }}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            />
+          </div>
+        </div>
+      );
+    };
+
     const SectionPanel = ({ title, icon: Icon, children, className = "" }) => (
-      <section className={`bg-white p-4 sm:p-6 rounded-2xl border border-zinc-200/80 shadow-sm mb-6 ${className}`}>
-        <div className="flex items-center gap-2 mb-4 sm:mb-6 border-b border-zinc-100 pb-3">
-          <Icon className="w-5 h-5 text-zinc-400" />
-          <h2 className="text-base font-semibold text-zinc-800">{title}</h2>
+      <section className={`bg-white dark:bg-zinc-900/50 p-4 sm:p-6 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm mb-6 ${className}`}>
+        <div className="flex items-center gap-2 mb-4 sm:mb-6 border-b border-zinc-100 dark:border-zinc-800 pb-3">
+          <Icon className="w-5 h-5 text-zinc-400 dark:text-zinc-500" />
+          <h2 className="text-base font-semibold text-zinc-800 dark:text-zinc-100">{title}</h2>
         </div>
         {children}
       </section>
@@ -134,21 +178,39 @@
     function App() {
       const [data, setData] = useState(DEFAULT_REPORT);
       const [activeTab, setActiveTab] = useState('editor');
-      const [copied, setCopied] = useState(false);
+      const [copiedType, setCopiedType] = useState(null);
       const [isDownloading, setIsDownloading] = useState(false);
+      const [isDarkMode, setIsDarkMode] = useState(false);
       
       const [showHexInput, setShowHexInput] = useState(false);
       const [tempHex, setTempHex] = useState('');
+      
+      const fileInputRef = useRef(null);
+      const logoInputRef = useRef(null);
 
+      // Initialization & Load from Storage
       useEffect(() => {
-        const saved = localStorage.getItem('digital_biz_settlement');
-        if (saved) {
+        const savedDraft = localStorage.getItem('digital_biz_settlement');
+        if (savedDraft) {
           try { 
-            const parsed = JSON.parse(saved);
+            const parsed = JSON.parse(savedDraft);
             if(!parsed.customColors) parsed.customColors = [];
-            // Ensure split logic is present in older saves
-            if(parsed.partner1 && typeof parsed.partner1.split === 'undefined') parsed.partner1.split = 50;
-            if(parsed.partner2 && typeof parsed.partner2.split === 'undefined') parsed.partner2.split = 50;
+            if(!parsed.thirdPartyCuts) parsed.thirdPartyCuts = [];
+            
+            // Auto-convert any old DD/MM/YYYY string into proper ISO format for the new input
+            const fixDate = (dateStr) => {
+              if (dateStr && dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+              }
+              return dateStr || '';
+            };
+            
+            // Auto-refresh the Date Generated to today every time you open it
+            parsed.dateGenerated = getTodayISO();
+            parsed.periodStart = fixDate(parsed.periodStart);
+            parsed.periodEnd = fixDate(parsed.periodEnd);
+            
             setData(parsed); 
           } 
           catch (e) { console.error("Parse error", e); }
@@ -158,6 +220,15 @@
       useEffect(() => {
         localStorage.setItem('digital_biz_settlement', JSON.stringify(data));
       }, [data]);
+
+      // Apply dark mode to outer container
+      useEffect(() => {
+        if (isDarkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }, [isDarkMode]);
 
       // --- Handlers ---
       const updateField = (field, value) => setData(prev => ({ ...prev, [field]: value }));
@@ -184,6 +255,10 @@
       const updateExpense = (id, field, value) => setData(prev => ({ ...prev, expenses: prev.expenses.map(e => e.id === id ? { ...e, [field]: value } : e) }));
       const removeExpense = (id) => setData(prev => ({ ...prev, expenses: prev.expenses.filter(e => e.id !== id) }));
 
+      const addThirdParty = () => setData(prev => ({ ...prev, thirdPartyCuts: [...prev.thirdPartyCuts, { id: Date.now(), description: '', amount: 0 }] }));
+      const updateThirdParty = (id, field, value) => setData(prev => ({ ...prev, thirdPartyCuts: prev.thirdPartyCuts.map(c => c.id === id ? { ...c, [field]: value } : c) }));
+      const removeThirdParty = (id) => setData(prev => ({ ...prev, thirdPartyCuts: prev.thirdPartyCuts.filter(c => c.id !== id) }));
+
       const clearData = () => { if(confirm("Clear all data and start a fresh report?")) setData(DEFAULT_REPORT); };
       const autoGenID = () => updateField('id', generateRandomID());
 
@@ -201,6 +276,46 @@
         } else {
           alert('Please enter a valid hex code, starting with # (e.g., #FF5733)');
         }
+      };
+
+      const handleLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => updateField('logoUrl', event.target.result);
+        reader.readAsDataURL(file);
+      };
+
+      // --- Backup & Restore Logic ---
+      const handleExportData = () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+        const downloadNode = document.createElement('a');
+        downloadNode.setAttribute("href", dataStr);
+        downloadNode.setAttribute("download", `Backup_${data.id}.json`);
+        document.body.appendChild(downloadNode);
+        downloadNode.click();
+        downloadNode.remove();
+      };
+
+      const handleImportData = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const importedData = JSON.parse(event.target.result);
+            if(importedData && importedData.id) {
+              setData(importedData);
+              alert("Backup loaded successfully!");
+            } else {
+              alert("Invalid backup file format.");
+            }
+          } catch(err) {
+            alert("Error reading file. Make sure it is a valid JSON backup.");
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = null;
       };
 
       // --- HTML to PDF Engine ---
@@ -231,13 +346,17 @@
       const totalDeductions = parseFloat(data.platformFees || 0) + parseFloat(data.refunds || 0) + totalOpExpenses;
       
       const netProfit = totalRevenue - totalDeductions;
+
+      // 3rd Party Deductions
+      const totalThirdParty = (data.thirdPartyCuts || []).reduce((sum, item) => sum + (parseFloat(item.amount || 0)), 0);
+      const distributableProfit = netProfit - totalThirdParty;
       
       // Dynamic Split
       const p1SplitPerc = parseFloat(data.partner1.split || 50);
       const p2SplitPerc = parseFloat(data.partner2.split || 50);
 
-      const partner1BaseShare = netProfit * (p1SplitPerc / 100);
-      const partner2BaseShare = netProfit * (p2SplitPerc / 100);
+      const partner1BaseShare = distributableProfit * (p1SplitPerc / 100);
+      const partner2BaseShare = distributableProfit * (p2SplitPerc / 100);
 
       const p1Reimbursement = data.expenses.filter(e => e.paidBy === 'partner1').reduce((sum, item) => sum + (parseFloat(item.amount || 0)), 0);
       const p2Reimbursement = data.expenses.filter(e => e.paidBy === 'partner2').reduce((sum, item) => sum + (parseFloat(item.amount || 0)), 0);
@@ -247,45 +366,58 @@
 
       const formatCur = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: data.currency }).format(amount);
 
+      // Safely converts YYYY-MM-DD back to DD/MM/YYYY for the PDF and Clipboard
+      const formatDateForPDF = (isoString) => {
+        if (!isoString) return "";
+        if (isoString.includes('/')) return isoString; 
+        try {
+           const [y, m, d] = isoString.split('-');
+           return `${d}/${m}/${y}`;
+        } catch(e) { return isoString; }
+      };
+
       // --- Copy to Google Sheets ---
-      const handleCopyToSheets = () => {
-        const tsvData = [
-          ['Report ID', 'Generated', 'Period Start', 'Period End', 'Gross Revenue', 'Platform Fees & Refunds', 'Op Expenses', 'Net Profit', `${data.partner1.name} Base Share (${p1SplitPerc}%)`, `${data.partner1.name} Reimbursement`, `${data.partner1.name} Total Payout`, `${data.partner2.name} Base Share (${p2SplitPerc}%)`, `${data.partner2.name} Reimbursement`, `${data.partner2.name} Total Payout`, 'Status'],
-          [
-            data.id, 
-            data.dateGenerated, 
-            data.periodStart,
-            data.periodEnd,
-            formatCur(totalRevenue), 
-            formatCur(parseFloat(data.platformFees || 0) + parseFloat(data.refunds || 0)),
-            formatCur(totalOpExpenses), 
-            formatCur(netProfit), 
-            formatCur(partner1BaseShare), 
-            formatCur(p1Reimbursement),
-            formatCur(partner1FinalPayout),
-            formatCur(partner2BaseShare),
-            formatCur(p2Reimbursement),
-            formatCur(partner2FinalPayout),
-            data.status === 'settled' ? 'Settled' : 'Pending'
-          ]
-        ].map(row => row.join('\t')).join('\n');
+      const handleCopy = (type) => {
+        const headers = ['Report ID', 'Generated', 'Period Start', 'Period End', 'Gross Revenue', 'Platform Fees & Refunds', 'Op Expenses', 'Net Profit', '3rd Party Cuts', 'Distributable Profit', `${data.partner1.name} Base Share (${p1SplitPerc}%)`, `${data.partner1.name} Reimbursement`, `${data.partner1.name} Total Payout`, `${data.partner2.name} Base Share (${p2SplitPerc}%)`, `${data.partner2.name} Reimbursement`, `${data.partner2.name} Total Payout`, 'Status'];
+        
+        const values = [
+          data.id, 
+          formatDateForPDF(data.dateGenerated), 
+          formatDateForPDF(data.periodStart),
+          formatDateForPDF(data.periodEnd),
+          formatCur(totalRevenue), 
+          formatCur(parseFloat(data.platformFees || 0) + parseFloat(data.refunds || 0)),
+          formatCur(totalOpExpenses), 
+          formatCur(netProfit),
+          formatCur(totalThirdParty),
+          formatCur(distributableProfit),
+          formatCur(partner1BaseShare), 
+          formatCur(p1Reimbursement),
+          formatCur(partner1FinalPayout),
+          formatCur(partner2BaseShare),
+          formatCur(p2Reimbursement),
+          formatCur(partner2FinalPayout),
+          data.status === 'settled' ? 'Settled' : 'Pending'
+        ];
+
+        const tsvData = type === 'headers' ? headers.join('\t') : values.join('\t');
 
         if (navigator.clipboard && window.isSecureContext) {
-          navigator.clipboard.writeText(tsvData).then(() => showCopied());
+          navigator.clipboard.writeText(tsvData).then(() => showCopied(type));
         } else {
           const textArea = document.createElement("textarea");
           textArea.value = tsvData;
           document.body.appendChild(textArea);
           textArea.focus();
           textArea.select();
-          try { document.execCommand('copy'); showCopied(); } catch (err) { console.error(err); }
+          try { document.execCommand('copy'); showCopied(type); } catch (err) { console.error(err); }
           document.body.removeChild(textArea);
         }
       };
 
-      const showCopied = () => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+      const showCopied = (type) => {
+        setCopiedType(type);
+        setTimeout(() => setCopiedType(null), 2000);
       };
 
       return (
@@ -293,6 +425,22 @@
           <style>{`
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
             body { font-family: 'Inter', sans-serif; }
+            
+            /* Hide input number arrows */
+            input[type=number]::-webkit-inner-spin-button, 
+            input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+            input[type=number] { -moz-appearance: textfield; }
+
+            /* Ensure the transparent calendar pop-up trigger covers the entire date input area */
+            input[type="date"]::-webkit-calendar-picker-indicator {
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              opacity: 0;
+              cursor: pointer;
+            }
             
             /* --- NATIVE BROWSER PRINT STYLES --- */
             @media print {
@@ -324,32 +472,41 @@
           `}</style>
 
           {/* --- Header --- */}
-          <header className="bg-white border-b border-zinc-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-20 no-print shadow-sm flex-wrap gap-3">
-            <div className="flex items-center gap-2 sm:gap-3 text-zinc-800">
+          <header className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-20 no-print shadow-sm flex-wrap gap-3 transition-colors">
+            <div className="flex items-center gap-2 sm:gap-3 text-zinc-800 dark:text-white">
               <div className="bg-indigo-600 p-1.5 sm:p-2 rounded-lg text-white">
                 <PieChart className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <span className="font-bold text-base sm:text-lg tracking-tight">Profit<span className="text-indigo-600 font-medium">Splitter</span></span>
+              <span className="font-bold text-base sm:text-lg tracking-tight">Profit<span className="text-indigo-600 dark:text-indigo-400 font-medium">Splitter</span></span>
             </div>
             
             {/* Mobile Tabs */}
-            <div className="md:hidden flex bg-zinc-100 p-1 rounded-lg border border-zinc-200 w-full sm:w-auto order-last sm:order-none justify-center">
-              <button onClick={() => setActiveTab('editor')} className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${activeTab === 'editor' ? 'bg-white shadow text-zinc-900' : 'text-zinc-500'}`}>Edit Data</button>
-              <button onClick={() => setActiveTab('preview')} className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${activeTab === 'preview' ? 'bg-white shadow text-zinc-900' : 'text-zinc-500'}`}>View Report</button>
+            <div className="md:hidden flex bg-zinc-100 dark:bg-zinc-800 p-1 rounded-lg border border-zinc-200 dark:border-zinc-700 w-full sm:w-auto order-last sm:order-none justify-center">
+              <button onClick={() => setActiveTab('editor')} className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${activeTab === 'editor' ? 'bg-white dark:bg-zinc-700 shadow text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}>Edit Data</button>
+              <button onClick={() => setActiveTab('preview')} className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${activeTab === 'preview' ? 'bg-white dark:bg-zinc-700 shadow text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}>View Report</button>
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4 ml-auto sm:ml-0">
-              <button onClick={handleCopyToSheets} className={`hidden md:flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${copied ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'}`}>
-                {copied ? <Check className="w-4 h-4" /> : <FileSpreadsheet className="w-4 h-4" />}
-                <span className="hidden lg:inline">{copied ? 'Copied' : 'Copy Row to Sheets'}</span>
-              </button>
-              
-              {/* Native Print */}
-              <button onClick={() => window.print()} className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-900 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-medium transition-all shadow-md active:scale-95 text-xs sm:text-sm">
-                <Printer className="w-4 h-4" />
-                <span className="hidden sm:inline">Print</span>
+              <button 
+                onClick={() => setIsDarkMode(!isDarkMode)} 
+                className="p-2 sm:px-3 sm:py-2.5 rounded-xl text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-2"
+                title="Toggle Dark Mode"
+              >
+                {isDarkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
               </button>
 
+              <div className="hidden lg:flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                <button onClick={() => handleCopy('headers')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${copiedType === 'headers' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 shadow-sm' : 'text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700 hover:shadow-sm'}`} title="Copy Headers">
+                  {copiedType === 'headers' ? <Check className="w-3.5 h-3.5" /> : <FileSpreadsheet className="w-3.5 h-3.5" />}
+                  <span>Headers</span>
+                </button>
+                <div className="w-px h-4 bg-zinc-300 dark:bg-zinc-600"></div>
+                <button onClick={() => handleCopy('values')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${copiedType === 'values' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 shadow-sm' : 'text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700 hover:shadow-sm'}`} title="Copy Values">
+                  {copiedType === 'values' ? <Check className="w-3.5 h-3.5" /> : <FileSpreadsheet className="w-3.5 h-3.5" />}
+                  <span>Values</span>
+                </button>
+              </div>
+              
               {/* Download PDF (html2pdf Engine) */}
               <button 
                 onClick={handleDownloadPDF} 
@@ -366,7 +523,7 @@
           <main className="flex-1 flex flex-col md:flex-row overflow-hidden max-w-[1800px] w-full mx-auto relative">
             
             {/* === EDITOR (LEFT) === */}
-            <div className={`w-full md:w-[500px] lg:w-[580px] bg-zinc-50/80 border-r border-zinc-200 overflow-y-auto no-print ${activeTab === 'editor' ? 'block' : 'hidden md:block'}`}>
+            <div className={`w-full md:w-[500px] lg:w-[580px] bg-zinc-50/80 dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto no-print transition-colors ${activeTab === 'editor' ? 'block' : 'hidden md:block'}`}>
               <div className="p-3 sm:p-6 lg:p-8">
                 
                 {/* Setup & Meta */}
@@ -374,35 +531,55 @@
                   <div className="flex flex-col sm:flex-row gap-4 mb-4">
                     <Input label="Business / Project Name" value={data.businessName} onChange={e => updateField('businessName', e.target.value)} className="flex-1 !mb-0" />
                     <div className="flex-1">
-                      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Currency</label>
+                      <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5 block">Currency</label>
                       <div className="relative">
-                        <select value={data.currency} onChange={(e) => updateField('currency', e.target.value)} className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-lg text-sm bg-zinc-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none appearance-none">
+                        <select value={data.currency} onChange={(e) => updateField('currency', e.target.value)} className="w-full px-3.5 py-2.5 border border-zinc-200 dark:border-zinc-700/80 rounded-lg text-sm bg-zinc-50 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-indigo-500/20 outline-none appearance-none">
                           {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.name} ({c.symbol})</option>)}
                         </select>
-                        <ChevronRight className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-zinc-400 pointer-events-none" />
+                        <ChevronRight className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-zinc-400 dark:text-zinc-500 pointer-events-none" />
                       </div>
                     </div>
                   </div>
 
+                  {/* Custom Logo Upload */}
+                  <div className="mb-4">
+                     <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5 block">Custom Logo</label>
+                     <div className="flex items-center gap-3">
+                       {data.logoUrl ? (
+                         <div className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 p-2 rounded-lg pr-4">
+                           <img src={data.logoUrl} alt="Logo Preview" className="h-8 w-auto object-contain bg-white rounded shadow-sm p-0.5" />
+                           <button onClick={() => updateField('logoUrl', '')} className="text-red-500 hover:text-red-600 p-1" title="Remove Logo">
+                             <Trash2 className="w-4 h-4" />
+                           </button>
+                         </div>
+                       ) : (
+                         <label className="flex items-center gap-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-4 py-2 rounded-lg transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-700">
+                           <ImagePlus className="w-4 h-4" /> Upload Logo
+                           <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} ref={logoInputRef} />
+                         </label>
+                       )}
+                     </div>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <Input label="Report ID" value={data.id} onChange={e => updateField('id', e.target.value)} className="!mb-0" rightAction={
-                      <button onClick={autoGenID} className="p-1.5 text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 rounded-md transition-colors"><RefreshCw className="w-4 h-4" /></button>
+                      <button onClick={autoGenID} className="p-1.5 text-zinc-400 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"><RefreshCw className="w-4 h-4" /></button>
                     }/>
-                    <Input label="Date Generated" value={data.dateGenerated} onChange={e => updateField('dateGenerated', e.target.value)} className="!mb-0" />
+                    <DateInput label="Date Generated" value={data.dateGenerated} onChange={e => updateField('dateGenerated', e.target.value)} className="!mb-0" />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label="Period Start (DD/MM/YYYY)" value={data.periodStart} onChange={e => updateField('periodStart', e.target.value)} className="!mb-0" />
-                    <Input label="Period End (DD/MM/YYYY)" value={data.periodEnd} onChange={e => updateField('periodEnd', e.target.value)} className="!mb-0" />
+                    <DateInput label="Period Start" value={data.periodStart} onChange={e => updateField('periodStart', e.target.value)} className="!mb-0" />
+                    <DateInput label="Period End" value={data.periodEnd} onChange={e => updateField('periodEnd', e.target.value)} className="!mb-0" />
                   </div>
 
-                  <div className="mt-6 border-t border-zinc-100 pt-4">
-                    <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Theme Color</label>
+                  <div className="mt-6 border-t border-zinc-100 dark:border-zinc-800 pt-4">
+                    <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2 block">Theme Color</label>
                     <div className="flex flex-wrap items-center gap-2">
                       {PRESET_COLORS.map(c => (
                         <button 
                           key={c.name} onClick={() => updateField('color', c.value)}
-                          className={`w-8 h-8 rounded-full border-2 transition-all ${data.color === c.value ? 'border-zinc-900 scale-110 shadow-md' : 'border-transparent hover:scale-110'}`}
+                          className={`w-8 h-8 rounded-full border-2 transition-all ${data.color === c.value ? 'border-zinc-900 dark:border-white scale-110 shadow-md' : 'border-transparent hover:scale-110'}`}
                           style={{ backgroundColor: c.value }} title={c.name}
                         />
                       ))}
@@ -410,14 +587,14 @@
                       {data.customColors?.map(c => (
                          <button 
                           key={c} onClick={() => updateField('color', c)}
-                          className={`w-8 h-8 rounded-full border-2 transition-all ${data.color === c ? 'border-zinc-900 scale-110 shadow-md' : 'border-transparent hover:scale-110'}`}
+                          className={`w-8 h-8 rounded-full border-2 transition-all ${data.color === c ? 'border-zinc-900 dark:border-white scale-110 shadow-md' : 'border-transparent hover:scale-110'}`}
                           style={{ backgroundColor: c }} title={c}
                         />
                       ))}
 
                       <button 
                         onClick={() => setShowHexInput(!showHexInput)} 
-                        className={`w-8 h-8 rounded-full border-2 border-dashed flex items-center justify-center transition-all ${showHexInput ? 'border-zinc-800 text-zinc-800 bg-zinc-100' : 'border-zinc-400 text-zinc-500 hover:border-zinc-800 hover:text-zinc-800'}`}
+                        className={`w-8 h-8 rounded-full border-2 border-dashed flex items-center justify-center transition-all ${showHexInput ? 'border-zinc-800 dark:border-zinc-300 text-zinc-800 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800' : 'border-zinc-400 dark:border-zinc-600 text-zinc-500 hover:border-zinc-800 dark:hover:border-zinc-400 dark:text-zinc-500'}`}
                         title="Add Custom Hex Code"
                       >
                         <Plus className="w-4 h-4" />
@@ -425,17 +602,17 @@
                     </div>
 
                     {showHexInput && (
-                      <div className="mt-3 flex gap-2 max-w-xs p-3 bg-zinc-50 border border-zinc-200 rounded-lg shadow-sm">
+                      <div className="mt-3 flex gap-2 max-w-xs p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-sm">
                         <input 
                           type="text" 
                           value={tempHex} 
                           onChange={e => setTempHex(e.target.value)} 
                           placeholder="#FF5733" 
-                          className="px-3 py-1.5 border border-zinc-300 rounded text-sm flex-1 outline-none focus:border-zinc-800" 
+                          className="px-3 py-1.5 border border-zinc-300 dark:border-zinc-600 rounded text-sm flex-1 outline-none focus:border-zinc-800 dark:focus:border-zinc-400 bg-white dark:bg-zinc-900 dark:text-white" 
                         />
                         <button 
                           onClick={handleSaveCustomColor} 
-                          className="bg-zinc-800 hover:bg-zinc-900 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                          className="bg-zinc-800 hover:bg-zinc-900 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
                         >
                           Save
                         </button>
@@ -444,44 +621,44 @@
                   </div>
                 </SectionPanel>
 
-                {/* Partnership Setup (Dynamic Split) */}
+                {/* Partnership Setup */}
                 <SectionPanel title="Partnership Setup" icon={Users}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Partner 1</label>
+                      <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5 block">Partner 1</label>
                       <div className="flex gap-2">
-                        <input value={data.partner1.name} onChange={e => updateNestedField('partner1', 'name', e.target.value)} className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm" placeholder="Name" />
+                        <input value={data.partner1.name} onChange={e => updateNestedField('partner1', 'name', e.target.value)} className="w-full px-3 py-2 border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-lg text-sm focus:border-indigo-500 dark:focus:border-indigo-400 outline-none" placeholder="Name" />
                         <div className="relative w-20 sm:w-24 shrink-0">
-                          <input type="number" min="0" max="100" value={data.partner1.split} onChange={e => handleSplitChange('partner1', e.target.value)} className="w-full pl-3 pr-6 py-2 border border-zinc-200 rounded-lg text-sm font-medium" />
+                          <input type="number" min="0" max="100" value={data.partner1.split} onChange={e => handleSplitChange('partner1', e.target.value)} className="w-full pl-3 pr-6 py-2 border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-lg text-sm font-medium focus:border-indigo-500 dark:focus:border-indigo-400 outline-none" />
                           <span className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 text-xs">%</span>
                         </div>
                       </div>
                     </div>
                     <div>
-                      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Partner 2</label>
+                      <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5 block">Partner 2</label>
                       <div className="flex gap-2">
-                        <input value={data.partner2.name} onChange={e => updateNestedField('partner2', 'name', e.target.value)} className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm" placeholder="Name" />
+                        <input value={data.partner2.name} onChange={e => updateNestedField('partner2', 'name', e.target.value)} className="w-full px-3 py-2 border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-lg text-sm focus:border-indigo-500 dark:focus:border-indigo-400 outline-none" placeholder="Name" />
                         <div className="relative w-20 sm:w-24 shrink-0">
-                          <input type="number" min="0" max="100" value={data.partner2.split} onChange={e => handleSplitChange('partner2', e.target.value)} className="w-full pl-3 pr-6 py-2 border border-zinc-200 rounded-lg text-sm font-medium" />
+                          <input type="number" min="0" max="100" value={data.partner2.split} onChange={e => handleSplitChange('partner2', e.target.value)} className="w-full pl-3 pr-6 py-2 border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-lg text-sm font-medium focus:border-indigo-500 dark:focus:border-indigo-400 outline-none" />
                           <span className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 text-xs">%</span>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs p-3 rounded-lg flex items-start sm:items-center gap-2">
+                  <div className="mt-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-400 text-xs p-3 rounded-lg flex items-start sm:items-center gap-2">
                     <Wallet className="w-4 h-4 shrink-0 mt-0.5 sm:mt-0" />
-                    <span>Net Profit will be divided based on a {p1SplitPerc}% / {p2SplitPerc}% split.</span>
+                    <span>Distributable Profit will be divided based on a {data.partner1.split}% / {data.partner2.split}% split.</span>
                   </div>
                 </SectionPanel>
 
                 {/* Inflow: Revenue */}
-                <SectionPanel title="Revenue Streams" icon={TrendingUp} className="border-emerald-200/60 shadow-emerald-900/5 relative overflow-hidden">
+                <SectionPanel title="Revenue Streams" icon={TrendingUp} className="border-emerald-200/60 dark:border-emerald-900/40 shadow-emerald-900/5 relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
                   <div className="space-y-3">
                     {data.revenue.map((item) => (
-                      <div key={item.id} className="flex flex-col sm:flex-row gap-2 relative group bg-zinc-50/50 sm:bg-transparent p-2 sm:p-0 rounded-lg border sm:border-transparent border-zinc-200">
+                      <div key={item.id} className="flex flex-col sm:flex-row gap-2 relative group bg-zinc-50/50 dark:bg-zinc-900/50 sm:bg-transparent p-2 sm:p-0 rounded-lg border sm:border-transparent border-zinc-200 dark:border-zinc-800">
                         <input 
-                          className="flex-1 px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                          className="flex-1 px-3 py-2 border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-lg text-sm focus:border-emerald-500 dark:focus:border-emerald-500 outline-none"
                           placeholder="Source (e.g., Gumroad Product A)"
                           value={item.source} onChange={e => updateRevenue(item.id, 'source', e.target.value)}
                         />
@@ -490,49 +667,49 @@
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">{currencySymbol}</span>
                             <input 
                               type="number" min="0" step="any"
-                              className="w-full pl-7 pr-3 py-2 border border-zinc-200 rounded-lg text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none font-medium text-emerald-700"
+                              className="w-full pl-7 pr-3 py-2 border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-emerald-700 dark:text-emerald-400 rounded-lg text-sm focus:border-emerald-500 dark:focus:border-emerald-500 outline-none font-medium"
                               value={item.amount} onChange={e => updateRevenue(item.id, 'amount', e.target.value)}
                             />
                           </div>
-                          <button onClick={() => removeRevenue(item.id)} className="text-red-400 hover:bg-red-50 rounded-lg border border-zinc-200 sm:border-transparent p-2 sm:opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                          <button onClick={() => removeRevenue(item.id)} className="text-red-400 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg border border-zinc-200 dark:border-zinc-700/80 sm:border-transparent p-2 sm:opacity-0 group-hover:opacity-100 transition-all shrink-0">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <button onClick={addRevenue} className="mt-4 w-full sm:w-auto justify-center flex items-center gap-2 text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-4 py-2 rounded-lg transition-all border border-emerald-200">
+                  <button onClick={addRevenue} className="mt-4 w-full sm:w-auto justify-center flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 px-4 py-2 rounded-lg transition-all border border-emerald-200 dark:border-emerald-800/50">
                     <Plus className="w-4 h-4" /> Add Revenue Source
                   </button>
                 </SectionPanel>
 
                 {/* Outflow: Deductions & Expenses */}
-                <SectionPanel title="Deductions & Expenses" icon={TrendingDown} className="border-rose-200/60 shadow-rose-900/5 relative overflow-hidden">
+                <SectionPanel title="Deductions & Expenses" icon={TrendingDown} className="border-rose-200/60 dark:border-rose-900/40 shadow-rose-900/5 relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 border-b border-rose-100 pb-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 border-b border-rose-100 dark:border-rose-900/30 pb-6">
                     <div>
-                      <label className="text-[11px] font-bold text-rose-800/70 uppercase tracking-wider mb-1.5 block">Platform Fees (e.g. Stripe)</label>
+                      <label className="text-[11px] font-bold text-rose-800/70 dark:text-rose-400 uppercase tracking-wider mb-1.5 block">Platform Fees (e.g. Stripe)</label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">{currencySymbol}</span>
-                        <input type="number" min="0" step="any" value={data.platformFees} onChange={e => updateField('platformFees', e.target.value)} className="w-full pl-7 pr-3 py-2 border border-rose-200 bg-rose-50/30 rounded-lg text-sm focus:border-rose-500 outline-none" />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 text-sm">{currencySymbol}</span>
+                        <input type="number" min="0" step="any" value={data.platformFees} onChange={e => updateField('platformFees', e.target.value)} className="w-full pl-7 pr-3 py-2 border border-rose-200 dark:border-rose-800/50 bg-rose-50/30 dark:bg-rose-900/10 text-zinc-900 dark:text-zinc-100 rounded-lg text-sm focus:border-rose-500 dark:focus:border-rose-400 outline-none" />
                       </div>
                     </div>
                     <div>
-                      <label className="text-[11px] font-bold text-rose-800/70 uppercase tracking-wider mb-1.5 block">Refunds Issued</label>
+                      <label className="text-[11px] font-bold text-rose-800/70 dark:text-rose-400 uppercase tracking-wider mb-1.5 block">Refunds Issued</label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">{currencySymbol}</span>
-                        <input type="number" min="0" step="any" value={data.refunds} onChange={e => updateField('refunds', e.target.value)} className="w-full pl-7 pr-3 py-2 border border-rose-200 bg-rose-50/30 rounded-lg text-sm focus:border-rose-500 outline-none" />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 text-sm">{currencySymbol}</span>
+                        <input type="number" min="0" step="any" value={data.refunds} onChange={e => updateField('refunds', e.target.value)} className="w-full pl-7 pr-3 py-2 border border-rose-200 dark:border-rose-800/50 bg-rose-50/30 dark:bg-rose-900/10 text-zinc-900 dark:text-zinc-100 rounded-lg text-sm focus:border-rose-500 dark:focus:border-rose-400 outline-none" />
                       </div>
                     </div>
                   </div>
 
-                  <h3 className="text-xs font-bold text-zinc-800 mb-3 uppercase tracking-widest">Operating Expenses</h3>
+                  <h3 className="text-xs font-bold text-zinc-800 dark:text-zinc-300 mb-3 uppercase tracking-widest">Operating Expenses</h3>
                   <div className="space-y-3">
                     {data.expenses.map((exp) => (
-                      <div key={exp.id} className="flex flex-col sm:flex-row gap-2 relative group bg-zinc-50/50 sm:bg-transparent p-2 sm:p-0 rounded-lg border sm:border-transparent border-zinc-200">
+                      <div key={exp.id} className="flex flex-col sm:flex-row gap-2 relative group bg-zinc-50/50 dark:bg-zinc-900/50 sm:bg-transparent p-2 sm:p-0 rounded-lg border sm:border-transparent border-zinc-200 dark:border-zinc-800">
                         <input 
-                          className="flex-1 px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none"
+                          className="flex-1 px-3 py-2 border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-lg text-sm focus:border-rose-500 dark:focus:border-rose-500 outline-none"
                           placeholder="e.g. Canva Pro, Ads"
                           value={exp.description} onChange={e => updateExpense(exp.id, 'description', e.target.value)}
                         />
@@ -540,7 +717,7 @@
                         <select
                           value={exp.paidBy || 'shared'}
                           onChange={e => updateExpense(exp.id, 'paidBy', e.target.value)}
-                          className="w-full sm:w-[140px] px-2 py-2 border border-zinc-200 rounded-lg text-xs focus:border-rose-500 outline-none bg-white sm:bg-zinc-50/50"
+                          className="w-full sm:w-[140px] px-2 py-2 border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-lg text-xs focus:border-rose-500 outline-none"
                         >
                           <option value="shared">Paid by Biz</option>
                           <option value="partner1">Paid by {data.partner1.name || 'P1'}</option>
@@ -552,51 +729,105 @@
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">{currencySymbol}</span>
                             <input 
                               type="number" min="0" step="any"
-                              className="w-full pl-7 pr-3 py-2 border border-zinc-200 rounded-lg text-sm focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none font-medium text-rose-700"
+                              className="w-full pl-7 pr-3 py-2 border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-rose-700 dark:text-rose-400 rounded-lg text-sm focus:border-rose-500 outline-none font-medium"
                               value={exp.amount} onChange={e => updateExpense(exp.id, 'amount', e.target.value)}
                             />
                           </div>
-                          <button onClick={() => removeExpense(exp.id)} className="text-red-400 hover:bg-red-50 rounded-lg border border-zinc-200 sm:border-transparent p-2 sm:opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                          <button onClick={() => removeExpense(exp.id)} className="text-red-400 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg border border-zinc-200 dark:border-zinc-700/80 sm:border-transparent p-2 sm:opacity-0 group-hover:opacity-100 transition-all shrink-0">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <button onClick={addExpense} className="mt-4 w-full sm:w-auto justify-center flex items-center gap-2 text-sm font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 px-4 py-2 rounded-lg transition-all border border-rose-200">
+                  <button onClick={addExpense} className="mt-4 w-full sm:w-auto justify-center flex items-center gap-2 text-sm font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 px-4 py-2 rounded-lg transition-all border border-rose-200 dark:border-rose-800/50">
                     <Plus className="w-4 h-4" /> Add Op Expense
+                  </button>
+                </SectionPanel>
+
+                {/* 3rd Party Cuts (Pre-Split) */}
+                <SectionPanel title="3rd Party / Affiliate Cuts (Pre-Split)" icon={UsersRound} className="border-amber-200/60 dark:border-amber-900/40 shadow-amber-900/5 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4">Fixed payouts to affiliates or guests. Deducted from Net Profit <b>before</b> the partner split.</p>
+                  
+                  <div className="space-y-3">
+                    {data.thirdPartyCuts.map((cut) => (
+                      <div key={cut.id} className="flex flex-col sm:flex-row gap-2 relative group bg-zinc-50/50 dark:bg-zinc-900/50 sm:bg-transparent p-2 sm:p-0 rounded-lg border sm:border-transparent border-zinc-200 dark:border-zinc-800">
+                        <input 
+                          className="flex-1 px-3 py-2 border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-lg text-sm focus:border-amber-500 outline-none"
+                          placeholder="e.g. Guest Writer: John Doe"
+                          value={cut.description} onChange={e => updateThirdParty(cut.id, 'description', e.target.value)}
+                        />
+                        
+                        <div className="flex gap-2 w-full sm:w-auto">
+                          <div className="relative w-full sm:w-32">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">{currencySymbol}</span>
+                            <input 
+                              type="number" min="0" step="any"
+                              className="w-full pl-7 pr-3 py-2 border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-amber-700 dark:text-amber-500 rounded-lg text-sm focus:border-amber-500 outline-none font-medium"
+                              value={cut.amount} onChange={e => updateThirdParty(cut.id, 'amount', e.target.value)}
+                            />
+                          </div>
+                          <button onClick={() => removeThirdParty(cut.id)} className="text-red-400 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg border border-zinc-200 dark:border-zinc-700/80 sm:border-transparent p-2 sm:opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button onClick={addThirdParty} className="mt-4 w-full sm:w-auto justify-center flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-500 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 px-4 py-2 rounded-lg transition-all border border-amber-200 dark:border-amber-800/50">
+                    <Plus className="w-4 h-4" /> Add 3rd Party Cut
                   </button>
                 </SectionPanel>
 
                 <SectionPanel title="Final Details" icon={CalendarDays}>
                   <div className="mb-4">
-                    <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Payout Status</label>
+                    <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5 block">Payout Status</label>
                     <select
                       value={data.status}
                       onChange={e => updateField('status', e.target.value)}
-                      className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 bg-zinc-50 outline-none"
+                      className="w-full px-3.5 py-2.5 border border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 outline-none"
                     >
                       <option value="pending">Pending Transfer</option>
                       <option value="settled">Settled / Paid to Partners</option>
                     </select>
                   </div>
+                  <div className="mb-4 flex flex-col">
+                    <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5 block">Settlement Instructions (Payment Info)</label>
+                    <textarea
+                      value={data.paymentInstructions} onChange={e => updateField('paymentInstructions', e.target.value)} placeholder="e.g., Partner A: PayPal (xyz@email.com)&#10;Partner B: Bank Transfer (Acct #1234)" rows={2}
+                      className="w-full px-3.5 py-2.5 border border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/50 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-y"
+                    />
+                  </div>
                   <div className="flex flex-col">
-                    <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Report Notes</label>
+                    <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5 block">Report Notes</label>
                     <textarea
                       value={data.notes} onChange={e => updateField('notes', e.target.value)} placeholder="Summary of the month, thoughts, etc." rows={3}
-                      className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 bg-zinc-50/50 resize-y"
+                      className="w-full px-3.5 py-2.5 border border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/50 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-y"
                     />
                   </div>
                 </SectionPanel>
 
-                <div className="pb-12 md:pb-0 flex justify-center">
-                   <button onClick={clearData} className="text-sm font-medium text-red-400 hover:text-red-600 bg-red-50 px-4 py-2 rounded-lg">Reset All Data</button>
+                {/* Data Management Options */}
+                <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-4 mb-12 sm:mb-0">
+                   <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                     <button onClick={handleExportData} className="flex items-center justify-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto">
+                       <Download className="w-4 h-4" /> Backup Data (JSON)
+                     </button>
+                     
+                     <label className="flex items-center justify-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto cursor-pointer">
+                       <Upload className="w-4 h-4" /> Load Backup
+                       <input type="file" accept=".json" className="hidden" onChange={handleImportData} ref={fileInputRef} />
+                     </label>
+                   </div>
+                   
+                   <button onClick={clearData} className="text-xs font-semibold text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 py-2 rounded transition-colors text-center">Reset Dashboard</button>
                 </div>
               </div>
             </div>
 
-            {/* === PREVIEW (RIGHT) === */}
-            <div className={`print-preview-wrapper flex-1 bg-zinc-300/30 p-2 sm:p-8 overflow-y-auto flex justify-center ${activeTab === 'preview' ? 'block' : 'hidden md:flex'}`}>
+            {/* === PREVIEW (RIGHT) - STAYS LIGHT FOR PDF OUTPUT === */}
+            <div className={`print-preview-wrapper flex-1 bg-zinc-300/30 dark:bg-black p-2 sm:p-8 overflow-y-auto flex justify-center transition-colors ${activeTab === 'preview' ? 'block' : 'hidden md:flex'}`}>
               
               {/* A4 Paper Canvas */}
               <div id="preview-container" className="bg-white shadow-sm sm:shadow-2xl w-full max-w-[850px] min-h-[100%] sm:min-h-[1100px] relative mx-auto shrink-0 ring-1 ring-zinc-200 flex flex-col">
@@ -608,13 +839,18 @@
                   
                   {/* --- Header Section --- */}
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 sm:mb-12 border-b border-zinc-100 pb-6 sm:pb-8 gap-4">
-                    <div>
-                      <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-zinc-900 mb-1" style={{ color: data.color }}>{data.businessName}</h1>
-                      <h2 className="text-base sm:text-lg font-medium text-zinc-400">Partnership Settlement</h2>
+                    <div className="flex flex-col gap-3">
+                      {data.logoUrl && (
+                         <img src={data.logoUrl} alt="Business Logo" className="h-12 sm:h-16 object-contain self-start" />
+                      )}
+                      <div>
+                        <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-zinc-900 mb-1" style={{ color: data.color }}>{data.businessName}</h1>
+                        <h2 className="text-base sm:text-lg font-medium text-zinc-400">Partnership Settlement</h2>
+                      </div>
                     </div>
                     <div className="text-left sm:text-right bg-zinc-50 sm:bg-transparent p-3 sm:p-0 rounded-lg w-full sm:w-auto">
                       <div className="text-xs sm:text-sm text-zinc-500 mb-1"><span className="font-bold text-zinc-800">Report ID:</span> {data.id}</div>
-                      <div className="text-xs sm:text-sm text-zinc-500 mb-3"><span className="font-bold text-zinc-800">Generated:</span> {data.dateGenerated}</div>
+                      <div className="text-xs sm:text-sm text-zinc-500 mb-3"><span className="font-bold text-zinc-800">Generated:</span> {formatDateForPDF(data.dateGenerated)}</div>
                       
                       {data.status === 'settled' ? (
                         <span className="inline-block px-3 py-1 sm:px-4 sm:py-1.5 bg-zinc-900 text-white font-bold text-[10px] sm:text-xs rounded-full uppercase tracking-widest shadow-sm">Settled</span>
@@ -628,7 +864,7 @@
                   <div className="grid grid-cols-1 print-grid-cols-2 sm:grid-cols-2 gap-4 sm:gap-8 mb-8 sm:mb-12 bg-zinc-50 p-4 sm:p-6 rounded-xl border border-zinc-100">
                     <div>
                       <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 sm:mb-2">Accounting Period</h3>
-                      <div className="text-zinc-900 font-medium text-sm sm:text-base">{data.periodStart} &mdash; {data.periodEnd}</div>
+                      <div className="text-zinc-900 font-medium text-sm sm:text-base">{formatDateForPDF(data.periodStart)} &mdash; {formatDateForPDF(data.periodEnd)}</div>
                     </div>
                     <div>
                       <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 sm:mb-2">Partners ({p1SplitPerc}% / {p2SplitPerc}%)</h3>
@@ -642,15 +878,15 @@
 
                   {/* --- Executive Summary Blocks --- */}
                   <div className="grid grid-cols-1 print-grid-cols-3 sm:grid-cols-3 gap-3 sm:gap-4 mb-8 sm:mb-12">
-                    <div className="border border-zinc-200 rounded-xl p-4 sm:p-5 text-center shadow-sm bg-white">
+                    <div className="border border-zinc-200 rounded-xl p-4 sm:p-5 text-center shadow-sm bg-white flex flex-col justify-center">
                       <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider mb-1 sm:mb-2">Gross Revenue</div>
                       <div className="text-xl sm:text-2xl font-black text-zinc-900">{formatCur(totalRevenue)}</div>
                     </div>
-                    <div className="border border-rose-100 rounded-xl p-4 sm:p-5 text-center shadow-sm bg-rose-50/30">
+                    <div className="border border-rose-100 rounded-xl p-4 sm:p-5 text-center shadow-sm bg-rose-50/30 flex flex-col justify-center">
                       <div className="text-[10px] uppercase font-bold text-rose-400 tracking-wider mb-1 sm:mb-2">Total Deductions</div>
                       <div className="text-xl sm:text-2xl font-black text-rose-600">-{formatCur(totalDeductions)}</div>
                     </div>
-                    <div className="border border-zinc-900 rounded-xl p-4 sm:p-5 text-center shadow-md text-white" style={{ backgroundColor: data.color }}>
+                    <div className="border border-zinc-900 rounded-xl p-4 sm:p-5 text-center shadow-md text-white flex flex-col justify-center" style={{ backgroundColor: data.color }}>
                       <div className="text-[10px] uppercase font-bold text-white/70 tracking-wider mb-1 sm:mb-2">Net Profit</div>
                       <div className="text-xl sm:text-2xl font-black text-white">{formatCur(netProfit)}</div>
                     </div>
@@ -727,13 +963,58 @@
                         </table>
                       </div>
                     </div>
+
+                    {/* 3rd Party Cuts Table (Only visible if amounts exist) */}
+                    {data.thirdPartyCuts && data.thirdPartyCuts.length > 0 && (
+                      <div className="mb-8 sm:mb-10">
+                        <h3 className="text-xs sm:text-sm font-bold text-zinc-800 mb-2 sm:mb-3 border-b border-zinc-200 pb-2 flex items-center gap-2">
+                          <UsersRound className="w-4 h-4 text-amber-500" /> 3rd Party / Affiliate Cuts
+                        </h3>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-sm min-w-[300px]">
+                            <tbody>
+                              {data.thirdPartyCuts.map((cut) => (
+                                <tr key={cut.id} className="border-b border-zinc-100 last:border-0">
+                                  <td className="py-2.5 sm:py-3 px-2 text-zinc-600">{cut.description || <span className="italic text-zinc-400">Unnamed Cut</span>}</td>
+                                  <td className="py-2.5 sm:py-3 px-2 text-right font-medium text-zinc-900">{formatCur(cut.amount)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot className="bg-amber-50/50">
+                              <tr>
+                                <td className="py-2.5 sm:py-3 px-2 font-bold text-amber-900 text-[10px] sm:text-xs uppercase">Total 3rd Party Deductions</td>
+                                <td className="py-2.5 sm:py-3 px-2 text-right font-black text-amber-600">{formatCur(totalThirdParty)}</td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* --- Partner Payout Section --- */}
-                  <div className="mt-8 sm:mt-12 pt-6 sm:pt-8">
-                    <div className="bg-white border-t-8 border-zinc-200 text-zinc-900 rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-xl border-x border-b" style={{ borderTopColor: data.color }}>
-                      <h3 className="text-[10px] sm:text-xs font-bold text-zinc-400 uppercase tracking-widest mb-6 sm:mb-8 text-center">Final Partner Settlement</h3>
-                      
+                  <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t-2 border-dashed border-zinc-200">
+                    <h3 className="text-lg sm:text-xl font-black text-zinc-800 mb-6 text-center">Final Partner Settlement</h3>
+
+                    {/* Dynamic math visualizer if 3rd party cuts exist */}
+                    {totalThirdParty > 0 && (
+                      <div className="flex flex-col sm:flex-row justify-between bg-zinc-50 border border-zinc-100 rounded-lg p-3 sm:p-4 mb-6 sm:mb-8 text-xs sm:text-sm">
+                        <div className="flex justify-between sm:block mb-2 sm:mb-0">
+                           <span className="text-zinc-500 block">Net Profit:</span>
+                           <span className="font-bold">{formatCur(netProfit)}</span>
+                        </div>
+                        <div className="flex justify-between sm:block mb-2 sm:mb-0">
+                           <span className="text-zinc-500 block">3rd Party Cuts:</span>
+                           <span className="font-bold text-rose-600">-{formatCur(totalThirdParty)}</span>
+                        </div>
+                        <div className="flex justify-between sm:block pt-2 sm:pt-0 border-t border-zinc-200 sm:border-0">
+                           <span className="text-zinc-500 block font-bold" style={{ color: data.color }}>Distributable Profit:</span>
+                           <span className="font-bold" style={{ color: data.color }}>{formatCur(distributableProfit)}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="bg-white border-t-8 border-zinc-200 text-zinc-900 rounded-xl sm:rounded-2xl p-5 sm:p-8 shadow-xl border-x border-b" style={{ borderTopColor: data.color }}>
                       <div className="flex flex-col sm:flex-row print-flex-row justify-center items-center gap-6 sm:gap-12">
                         <div className="text-center w-full print-w-half sm:w-1/2">
                           <div className="text-zinc-500 text-xs sm:text-sm font-medium mb-1">{data.partner1.name}</div>
@@ -747,7 +1028,7 @@
                           )}
                         </div>
                         
-                        {/* Dividers: Horizontal for Mobile, Vertical for Desktop/Print */}
+                        {/* Dividers */}
                         <div className="hidden sm:block print-divider-v w-px h-16 bg-zinc-200"></div>
                         <div className="sm:hidden print-divider-h h-px w-32 bg-zinc-200"></div>
                         
@@ -765,11 +1046,20 @@
                       </div>
                     </div>
 
-                    {data.notes && (
-                      <div className="mt-6 sm:mt-8 text-center px-4 sm:px-12">
-                        <p className="text-xs sm:text-sm text-zinc-500 italic">"{data.notes}"</p>
-                      </div>
-                    )}
+                    <div className="mt-8 flex flex-col sm:flex-row gap-6 sm:gap-12">
+                      {data.paymentInstructions && (
+                        <div className="flex-1 bg-zinc-50 rounded-xl border border-zinc-200 p-4">
+                           <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 flex items-center gap-1.5"><Wallet className="w-3.5 h-3.5" /> Payment Instructions</h4>
+                           <pre className="text-xs sm:text-sm text-zinc-700 whitespace-pre-wrap font-sans font-medium">{data.paymentInstructions}</pre>
+                        </div>
+                      )}
+                      
+                      {data.notes && (
+                        <div className="flex-1 text-center sm:text-left pt-2">
+                          <p className="text-xs sm:text-sm text-zinc-500 italic">"{data.notes}"</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                 </div>
@@ -786,5 +1076,4 @@
     root.render(<App />);
   </script>
 </body>
-
 </html>
